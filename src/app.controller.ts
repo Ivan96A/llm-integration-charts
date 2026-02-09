@@ -1,7 +1,5 @@
 import { Controller, Get, Post, Body, HttpCode } from '@nestjs/common';
-import {AppService, LlmResult, ChartType} from './app.service';
-
-const VALID_CHART_TYPES: ChartType[] = ['line', 'bar', 'bar-grouped', 'pie', 'funnel'];
+import {AppService, LlmResult} from './app.service';
 
 @Controller()
 export class AppController {
@@ -9,7 +7,7 @@ export class AppController {
 
   @Post('api/analyze')
   @HttpCode(200)
-  async analyze(@Body() body: { text: string, chartType?: ChartType }): Promise<LlmResult> {
+  async analyze(@Body() body: { text: string }): Promise<LlmResult> {
       if (!body.text || body.text.length > 1024) {
           return {
               "success": false,
@@ -18,19 +16,10 @@ export class AppController {
           }
       }
 
-      const chartType = body.chartType || 'bar';
-      if (!VALID_CHART_TYPES.includes(chartType)) {
-          return {
-              "success": false,
-              "error": "Помилка валідації",
-              "details": `Невірний тип діаграми. Допустимі: ${VALID_CHART_TYPES.join(', ')}`
-          }
-      }
-
       try {
           const request = await this.appService.storeRequest(JSON.stringify(body));
           const llmResult = await this.appService.analyze(body.text, request.id);
-          return this.appService.generateChartResponse(llmResult, request.id, chartType)
+          return this.appService.generateChartResponse(body.text, llmResult, request.id)
       }
       catch (e) {
           return {

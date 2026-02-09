@@ -75,9 +75,10 @@ Extracts numerical data from text and returns an ECharts chart configuration.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `text` | string | Yes | Text to analyze (max 1024 chars) |
-| `chartType` | string | No | Chart type (default: `bar`) |
 
-**Supported Chart Types:**
+**Automatic Chart Type Detection:**
+
+The LLM automatically determines the most appropriate chart type based on the text content:
 
 | Type | Description |
 |------|-------------|
@@ -90,8 +91,7 @@ Extracts numerical data from text and returns an ECharts chart configuration.
 **Request:**
 ```json
 {
-  "text": "Яблука 150, Груші 200, Банани 75",
-  "chartType": "bar"
+  "text": "Яблука 150, Груші 200, Банани 75"
 }
 ```
 
@@ -123,39 +123,39 @@ Extracts numerical data from text and returns an ECharts chart configuration.
 
 ### curl Examples
 
-**Bar chart (default):**
+**Basic request:**
 ```bash
 curl -X POST http://localhost:3000/api/analyze \
   -H "Content-Type: application/json" \
   -d '{"text": "Яблука 150, Груші 200, Банани 75"}'
 ```
 
-**Line chart:**
+**Time-series data (LLM may choose line chart):**
 ```bash
 curl -X POST http://localhost:3000/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"text": "Продажі за місяць: Київ 1200, Львів 800, Одеса 650", "chartType": "line"}'
+  -d '{"text": "Продажі: 2021 рік 1200, 2022 рік 800, 2023 рік 650"}'
 ```
 
-**Pie chart:**
+**Budget data (LLM may choose pie chart):**
 ```bash
 curl -X POST http://localhost:3000/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"text": "Бюджет: зарплата 50000, оренда 15000, їжа 8000", "chartType": "pie"}'
+  -d '{"text": "Бюджет: зарплата 50000, оренда 15000, їжа 8000"}'
 ```
 
-**Funnel chart:**
+**Funnel data (LLM may choose funnel chart):**
 ```bash
 curl -X POST http://localhost:3000/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"text": "Воронка: відвідувачі 1000, реєстрації 400, покупки 100", "chartType": "funnel"}'
+  -d '{"text": "Воронка продажів: відвідувачі 1000, реєстрації 400, покупки 100"}'
 ```
 
 **Request with formatted output:**
 ```bash
 curl -s -X POST http://localhost:3000/api/analyze \
   -H "Content-Type: application/json" \
-  -d '{"text": "Дані: A 10, B 20, C 30", "chartType": "bar-grouped"}' | jq
+  -d '{"text": "Дані: A 10, B 20, C 30"}' | jq
 ```
 
 **Error Response:**

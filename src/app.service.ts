@@ -11,6 +11,15 @@ export interface LlmResult {
     echartsConfig?: Record<string, any>;
 }
 
+const chartTypes = [
+    {type: "bar", keyWords: "продажі за місяцями, продуктивність"},
+    {type: "line", keyWords: "температура, витрати за кварталами"},
+    {type: "pie", keyWords: "розподіл бюджету, доходи по категоріях"},
+    {type: "bar-grouped", keyWords: "продажі по регіонах з розбивкою"},
+    {type: "funnel", keyWords: "воронка конверсії, етапи продажу"}
+]
+
+
 @Injectable()
 export class AppService implements OnModuleInit {
     private generator: any;
@@ -19,41 +28,41 @@ export class AppService implements OnModuleInit {
         switch (chartType) {
             case 'line':
                 return {
-                    xAxis: { type: 'category', data: labels },
-                    yAxis: { type: 'value' },
-                    series: [{ type: 'line', data: values }]
+                    xAxis: {type: 'category', data: labels},
+                    yAxis: {type: 'value'},
+                    series: [{type: 'line', data: values}]
                 };
             case 'bar':
                 return {
-                    xAxis: { type: 'category', data: labels },
-                    yAxis: { type: 'value' },
-                    series: [{ type: 'bar', data: values }]
+                    xAxis: {type: 'category', data: labels},
+                    yAxis: {type: 'value'},
+                    series: [{type: 'bar', data: values}]
                 };
             case 'bar-grouped':
                 return {
-                    xAxis: { type: 'category', data: labels },
-                    yAxis: { type: 'value' },
-                    series: [{ type: 'bar', data: values, barGap: '0%' }]
+                    xAxis: {type: 'category', data: labels},
+                    yAxis: {type: 'value'},
+                    series: [{type: 'bar', data: values, barGap: '0%'}]
                 };
             case 'pie':
                 return {
                     series: [{
                         type: 'pie',
-                        data: labels.map((label, i) => ({ name: label, value: values[i] }))
+                        data: labels.map((label, i) => ({name: label, value: values[i]}))
                     }]
                 };
             case 'funnel':
                 return {
                     series: [{
                         type: 'funnel',
-                        data: labels.map((label, i) => ({ name: label, value: values[i] }))
+                        data: labels.map((label, i) => ({name: label, value: values[i]}))
                     }]
                 };
             default:
                 return {
-                    xAxis: { type: 'category', data: labels },
-                    yAxis: { type: 'value' },
-                    series: [{ type: 'bar', data: values }]
+                    xAxis: {type: 'category', data: labels},
+                    yAxis: {type: 'value'},
+                    series: [{type: 'bar', data: values}]
                 };
         }
     }
@@ -79,7 +88,8 @@ Required JSON format:
 
 Text to process:`
 
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) {
+    }
 
     async onModuleInit() {
         console.log('Loading model...');
@@ -131,11 +141,60 @@ Text to process:`
         }
     }
 
-    async generateChartResponse(llmResult: Array<{label: string, amount: number}>, requestId: number, chartType: ChartType = 'bar') {
+    private async identifyChartType(originalText: string): Promise<ChartType> {
+        const chartOptions: ChartType[] = ['bar', 'line', 'pie', 'funnel', 'bar-grouped'];
+
+        const prompt = `What number best describes this data?
+
+1 = comparing items (продажі, продуктивність)
+2 = change over time (температура, витрати за кварталами)
+3 = parts of whole (розподіл бюджету, частки)
+4 = stages decreasing (воронка, етапи, конверсія)
+5 = comparing groups (порівняння груп)
+
+Data: ${originalText}
+
+Reply with number 1-5:`;
+
+        const finalPrompt = this.generator.tokenizer.apply_chat_template([{
+            role: 'user', content: prompt
+        }], {
+            tokenize: false,
+            add_generation_prompt: true,
+        });
+
+        try {
+            const result: Array<any> = await this.generator(finalPrompt, {
+                max_new_tokens: 5,
+                do_sample: false,
+                return_full_text: false,
+            });
+
+            const answer = result[0].generated_text.trim();
+            console.log('LLM answer:', answer);
+
+            const numMatch = answer.match(/[1-5]/);
+            if (numMatch) {
+                const index = parseInt(numMatch[0]) - 1;
+                return chartOptions[index];
+            }
+
+            return 'bar';
+        } catch (e) {
+            console.error('Chart type identification failed:', e.message);
+            return 'bar';
+        }
+    }
+
+    async generateChartResponse(originalText: string, llmResult: Array<{
+        label: string,
+        amount: number
+    }>, requestId: number) {
         try {
             const labels = llmResult.map(item => item.label);
             const values = llmResult.map(item => item.amount);
-
+            const chartType = await this.identifyChartType(originalText);
+            console.log('chart type = ', chartType);
             const response: LlmResult = {
                 success: true,
                 echartsConfig: this.buildChartConfig(chartType, labels, values)
@@ -149,8 +208,7 @@ Text to process:`
             });
 
             return response;
-        }
-        catch (e) {
+        } catch (e) {
             throw new Error('Error during final response generation ' + e.message);
         }
     }
