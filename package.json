@@ -1,0 +1,29 @@
+{
+  "name": "nestjs-api",
+  "version": "1.0.0",
+  "description": "NestJS API with Prisma and PostgreSQL",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:prod": "node dist/main",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:prod": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.8.1",
+    "@nestjs/common": "^10.3.0",
+    "@nestjs/core": "^10.3.0",
+    "@nestjs/platform-express": "^10.3.0",
+    "@prisma/client": "^5.8.0",
+    "reflect-metadata": "^0.1.14",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.3.0",
+    "@types/node": "^20.10.0",
+    "prisma": "^5.8.0",
+    "typescript": "^5.3.0"
+  }
+}
