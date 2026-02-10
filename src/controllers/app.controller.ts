@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, HttpCode } from '@nestjs/common';
-import {AppService, LlmResult} from './app.service';
+import { Controller, Post, Body, HttpCode } from '@nestjs/common';
+import {AppService} from '../services/app.service';
+import {LlmResult} from '../types';
 
 @Controller()
 export class AppController {
@@ -18,7 +19,7 @@ export class AppController {
 
       try {
           const request = await this.appService.storeRequest(JSON.stringify(body));
-          const llmResult = await this.appService.analyze(body.text, request.id);
+          const llmResult = await this.appService.extractAndStoreCategories(body.text, request.id);
           return this.appService.generateChartResponse(body.text, llmResult, request.id)
       }
       catch (e) {

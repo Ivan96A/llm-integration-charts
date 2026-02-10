@@ -192,3 +192,27 @@ The application uses PostgreSQL with the following tables:
 - **Database:** PostgreSQL
 - **ORM:** Prisma
 - **LLM:** Hugging Face Transformers (Qwen1.5-0.5B-Chat)
+
+## Project Structure
+
+```
+src/
+├── main.ts                      # Application entry point
+├── app.module.ts                # Root module
+├── types.ts                     # Shared type definitions
+├── controllers/
+│   └── app.controller.ts        # HTTP request handlers
+└── services/
+    ├── app.service.ts           # Main business logic
+    ├── llm.service.ts           # LLM operations (data extraction, chart type detection)
+    └── prisma.service.ts        # Database connection management
+```
+
+### Key Components
+
+| Component | Responsibility |
+|-----------|----------------|
+| `AppController` | Handles HTTP requests, input validation |
+| `AppService` | Orchestrates data flow, builds chart configs, stores results |
+| `LlmService` | Manages LLM model, extracts data, identifies chart types |
+| `PrismaService` | Database connection lifecycle |
